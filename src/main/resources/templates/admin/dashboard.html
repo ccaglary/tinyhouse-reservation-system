@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Admin Dashboard</title></head>
+<body>
+<main layout:fragment="content">
+    <div class="dashboard-wrapper">
+        <div class="container-fluid">
+            <div class="row">
+                
+                <nav class="col-md-2 sidebar">
+                    <div class="sidebar-header"><h5><i class="bi bi-shield-check"></i> Admin Panel</h5></div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link active" href="/admin/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/admin/users"><i class="bi bi-people"></i> Kullanıcılar</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/admin/reservations"><i class="bi bi-calendar-check"></i> Rezervasyonlar</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/admin/tinyhouses"><i class="bi bi-house"></i> Tiny House'lar</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/admin/reports"><i class="bi bi-graph-up"></i> Raporlar</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="col-md-10 dashboard-content">
+                    <h3 class="mb-4">Dashboard</h3>
+                    <div class="row g-4 mb-4" id="statsCards">
+                        <div class="col-md-3"><div class="stat-card-dash"><div class="stat-card-icon bg-primary"><i class="bi bi-people-fill"></i></div><div><h4 id="totalUsers">-</h4><p>Toplam Kullanıcı</p></div></div></div>
+                        <div class="col-md-3"><div class="stat-card-dash"><div class="stat-card-icon bg-success"><i class="bi bi-calendar-check-fill"></i></div><div><h4 id="activeRes">-</h4><p>Aktif Rezervasyon</p></div></div></div>
+                        <div class="col-md-3"><div class="stat-card-dash"><div class="stat-card-icon bg-warning"><i class="bi bi-house-fill"></i></div><div><h4 id="totalHouses">-</h4><p>Toplam Tiny House</p></div></div></div>
+                        <div class="col-md-3"><div class="stat-card-dash"><div class="stat-card-icon bg-info"><i class="bi bi-currency-dollar"></i></div><div><h4 id="totalRevenue">-</h4><p>Toplam Gelir</p></div></div></div>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-8"><div class="card"><div class="card-body"><h5>Gelir Grafiği</h5><canvas id="revenueChart" height="250"></canvas></div></div></div>
+                        <div class="col-md-4"><div class="card"><div class="card-body"><h5>İstatistikler</h5>
+                            <div class="mb-3"><span class="text-muted">Bekleyen Rezervasyonlar</span><h4 id="pendingRes">-</h4></div>
+                            <div class="mb-3"><span class="text-muted">Aylık Gelir</span><h4 id="monthlyRevenue">-</h4></div>
+                            <div class="mb-3"><span class="text-muted">Toplam Yorum</span><h4 id="totalReviews">-</h4></div>
+                        </div></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script layout:fragment="scripts">
+async function loadDashboard() {
+    const token = localStorage.getItem('accessToken');
+    const res = await fetch('/api/admin/dashboard', {headers:{'Authorization':'Bearer '+token}});
+    const data = await res.json();
+    if (!data.success) return;
+    const s = data.data;
+    document.getElementById('totalUsers').textContent = s.totalUsers;
+    document.getElementById('activeRes').textContent = s.activeReservations;
+    document.getElementById('totalHouses').textContent = s.totalTinyHouses;
+    document.getElementById('totalRevenue').textContent = (s.totalRevenue||0).toLocaleString('tr-TR') + ' ₺';
+    document.getElementById('pendingRes').textContent = s.pendingReservations;
+    document.getElementById('monthlyRevenue').textContent = (s.monthlyRevenue||0).toLocaleString('tr-TR') + ' ₺';
+    document.getElementById('totalReviews').textContent = s.totalReviews;
+    // Chart
+    const chartRes = await fetch('/api/admin/reports/daily?days=30', {headers:{'Authorization':'Bearer '+token}});
+    const chartData = await chartRes.json();
+    if (chartData.success && chartData.data) {
+        new Chart(document.getElementById('revenueChart'), {
+            type:'line', data:{
+                labels: chartData.data.map(d=>d[0]),
+                datasets:[{label:'Gelir (₺)',data:chartData.data.map(d=>d[2]||0),borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.1)',fill:true,tension:0.4}]
+            }, options:{responsive:true,plugins:{legend:{display:false}}}
+        });
+    }
+}
+loadDashboard();
+</script>
+</body>
+</html>

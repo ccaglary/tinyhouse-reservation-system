@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Admin - Raporlar</title></head>
+<body><main layout:fragment="content">
+    <div class="dashboard-wrapper"><div class="container-fluid"><div class="row">
+        <nav class="col-md-2 sidebar"><div class="sidebar-header"><h5><i class="bi bi-shield-check"></i> Admin</h5></div>
+            <ul class="nav flex-column"><li class="nav-item"><a class="nav-link" href="/admin/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li><li class="nav-item"><a class="nav-link" href="/admin/users"><i class="bi bi-people"></i> Kullanıcılar</a></li><li class="nav-item"><a class="nav-link" href="/admin/reservations"><i class="bi bi-calendar-check"></i> Rezervasyonlar</a></li><li class="nav-item"><a class="nav-link" href="/admin/tinyhouses"><i class="bi bi-house"></i> Tiny House'lar</a></li><li class="nav-item"><a class="nav-link active" href="/admin/reports"><i class="bi bi-graph-up"></i> Raporlar</a></li></ul></nav>
+        <div class="col-md-10 dashboard-content"><h3 class="mb-4">Raporlar & Grafikler</h3>
+            <div class="row g-4"><div class="col-md-6"><div class="card"><div class="card-body"><h5>Günlük Gelir (Son 30 Gün)</h5><canvas id="dailyRevenueChart" height="300"></canvas></div></div></div>
+                <div class="col-md-6"><div class="card"><div class="card-body"><h5>En Popüler Tiny House'lar</h5><canvas id="popularChart" height="300"></canvas></div></div></div></div>
+        </div></div></div></div>
+</main>
+<script layout:fragment="scripts">
+async function loadReports(){const t=localStorage.getItem('accessToken');
+const [dr,pr]=await Promise.all([fetch('/api/admin/reports/daily?days=30',{headers:{'Authorization':'Bearer '+t}}),fetch('/api/admin/reports/popular?limit=5',{headers:{'Authorization':'Bearer '+t}})]);
+const dd=await dr.json(),pd=await pr.json();
+if(dd.success&&dd.data.length){new Chart(document.getElementById('dailyRevenueChart'),{type:'bar',data:{labels:dd.data.map(d=>d[0]),datasets:[{label:'Gelir (₺)',data:dd.data.map(d=>d[2]||0),backgroundColor:'rgba(99,102,241,0.6)'}]},options:{responsive:true}});}
+if(pd.success&&pd.data.length){new Chart(document.getElementById('popularChart'),{type:'doughnut',data:{labels:pd.data.map(d=>d[1]),datasets:[{data:pd.data.map(d=>d[2]),backgroundColor:['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6']}]},options:{responsive:true}});}}
+loadReports();
+</script></body></html>

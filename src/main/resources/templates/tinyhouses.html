@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Tiny House'lar</title></head>
+<body>
+<main layout:fragment="content">
+    <section class="listing-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="filter-card sticky-top" style="top:90px">
+                        <h5 class="mb-3"><i class="bi bi-funnel"></i> Filtrele</h5>
+                        <div class="mb-3"><label class="form-label fw-semibold">Şehir</label>
+                            <select class="form-select" id="filterCity"><option value="">Tüm Şehirler</option>
+                                <option th:each="c : ${cities}" th:value="${c}" th:text="${c}"></option></select></div>
+                        <div class="mb-3"><label class="form-label fw-semibold">Fiyat (₺)</label>
+                            <div class="row g-2"><div class="col-6"><input type="number" class="form-control" id="minPrice" placeholder="Min"></div>
+                                <div class="col-6"><input type="number" class="form-control" id="maxPrice" placeholder="Max"></div></div></div>
+                        <div class="mb-3"><label class="form-label fw-semibold">Kapasite</label>
+                            <select class="form-select" id="filterCapacity"><option value="">Tümü</option>
+                                <option value="2">2+</option><option value="4">4+</option><option value="6">6+</option></select></div>
+                        <div class="mb-3"><label class="form-label fw-semibold">Özellikler</label>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" id="filterWifi"><label class="form-check-label" for="filterWifi">Wi-Fi</label></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" id="filterParking"><label class="form-check-label" for="filterParking">Otopark</label></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" id="filterPet"><label class="form-check-label" for="filterPet">Evcil Hayvan</label></div></div>
+                        <button class="btn btn-primary w-100" onclick="applyFilters()"><i class="bi bi-search"></i> Filtrele</button>
+                        <button class="btn btn-outline-secondary w-100 mt-2" onclick="clearFilters()">Temizle</button>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0">Tiny House'lar</h4>
+                        <input type="text" class="form-control" id="searchKeyword" placeholder="Ara..." style="width:250px">
+                    </div>
+                    <div class="row g-4" id="housesGrid"></div>
+                    <div id="emptyState" class="empty-state d-none text-center py-5">
+                        <i class="bi bi-house-slash" style="font-size:4rem;color:#aaa"></i><h4 class="mt-3">Sonuç Bulunamadı</h4></div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+<script layout:fragment="scripts">
+function loadHouses(page=0){
+    const p=new URLSearchParams();
+    const city=document.getElementById('filterCity').value;
+    if(city)p.set('city',city);
+    const min=document.getElementById('minPrice').value;if(min)p.set('minPrice',min);
+    const max=document.getElementById('maxPrice').value;if(max)p.set('maxPrice',max);
+    const cap=document.getElementById('filterCapacity').value;if(cap)p.set('capacity',cap);
+    if(document.getElementById('filterWifi').checked)p.set('wifi','true');
+    if(document.getElementById('filterParking').checked)p.set('parking','true');
+    if(document.getElementById('filterPet').checked)p.set('petAllowed','true');
+    p.set('page',page);p.set('size',12);
+    const kw=document.getElementById('searchKeyword').value;
+    let url=kw?`/api/tinyhouses/search/keyword?q=${encodeURIComponent(kw)}&${p}`:`/api/tinyhouses/search?${p}`;
+    fetch(url).then(r=>r.json()).then(d=>{
+        const g=document.getElementById('housesGrid'),e=document.getElementById('emptyState');
+        if(!d.success||!d.data.content.length){g.innerHTML='';e.classList.remove('d-none');return;}
+        e.classList.add('d-none');
+        g.innerHTML=d.data.content.map(h=>`<div class="col-md-6 col-lg-4"><div class="house-card" onclick="location.href='/tinyhouses/${h.id}'"><div class="house-card-img"><img src="${h.coverImageUrl||'/images/placeholder.jpg'}" alt="${h.title}"><div class="house-card-badge"><span class="badge bg-primary"><i class="bi bi-star-fill"></i> ${h.averageRating||'0'}</span></div></div><div class="house-card-body"><h5 class="house-card-title">${h.title}</h5><p class="house-card-location"><i class="bi bi-geo-alt"></i> ${h.city}</p><div class="house-card-features"><span><i class="bi bi-people"></i> ${h.capacity}</span><span><i class="bi bi-door-open"></i> ${h.roomCount}</span></div><div class="house-card-price"><span class="price">${h.nightlyPrice} ₺</span><span class="price-unit"> / gece</span></div></div></div></div>`).join('');
+    });
+}
+function applyFilters(){loadHouses(0);}
+function clearFilters(){document.querySelectorAll('.filter-card input,.filter-card select').forEach(e=>{if(e.type==='checkbox')e.checked=false;else e.value='';});loadHouses(0);}
+document.getElementById('searchKeyword').addEventListener('keypress',e=>{if(e.key==='Enter')loadHouses(0);});
+loadHouses();
+</script>
+</body>
+</html>

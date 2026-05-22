@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Ev Ekle</title></head>
+<body><main layout:fragment="content">
+    <div class="dashboard-wrapper"><div class="container-fluid"><div class="row">
+        <nav class="col-md-2 sidebar"><div class="sidebar-header"><h5><i class="bi bi-house-gear"></i> Ev Sahibi</h5></div>
+            <ul class="nav flex-column"><li class="nav-item"><a class="nav-link" href="/owner/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li><li class="nav-item"><a class="nav-link" href="/owner/my-houses"><i class="bi bi-house"></i> Evlerim</a></li><li class="nav-item"><a class="nav-link active" href="/owner/add-house"><i class="bi bi-plus-circle"></i> Ev Ekle</a></li><li class="nav-item"><a class="nav-link" href="/owner/reservations"><i class="bi bi-calendar-check"></i> Rezervasyonlar</a></li></ul></nav>
+        <div class="col-md-10 dashboard-content"><h3 class="mb-4">Yeni Tiny House Ekle</h3>
+            <div class="card"><div class="card-body"><form id="addHouseForm">
+                <div class="row g-3">
+                    <div class="col-md-8"><label class="form-label">Başlık</label><input type="text" class="form-control" id="thTitle" required></div>
+                    <div class="col-md-4"><label class="form-label">Gecelik Fiyat (₺)</label><input type="number" class="form-control" id="thPrice" step="0.01" required></div>
+                    <div class="col-12"><label class="form-label">Açıklama</label><textarea class="form-control" id="thDesc" rows="4" required></textarea></div>
+                    <div class="col-md-4"><label class="form-label">Şehir</label><input type="text" class="form-control" id="thCity" required></div>
+                    <div class="col-md-4"><label class="form-label">İlçe</label><input type="text" class="form-control" id="thDistrict"></div>
+                    <div class="col-md-4"><label class="form-label">Adres</label><input type="text" class="form-control" id="thAddress" required></div>
+                    <div class="col-md-3"><label class="form-label">Kapasite</label><input type="number" class="form-control" id="thCapacity" min="1" required></div>
+                    <div class="col-md-3"><label class="form-label">Oda</label><input type="number" class="form-control" id="thRooms" min="1" value="1"></div>
+                    <div class="col-md-3"><label class="form-label">Yatak</label><input type="number" class="form-control" id="thBeds" min="1" value="1"></div>
+                    <div class="col-md-3"><label class="form-label">Banyo</label><input type="number" class="form-control" id="thBaths" min="1" value="1"></div>
+                    <div class="col-md-3"><label class="form-label">Temizlik Ücreti (₺)</label><input type="number" class="form-control" id="thClean" step="0.01" value="0"></div>
+                    <div class="col-md-9"><label class="form-label">Özellikler</label><div class="d-flex gap-3 flex-wrap">
+                        <div class="form-check"><input class="form-check-input" type="checkbox" id="thWifi"><label class="form-check-label" for="thWifi">Wi-Fi</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" id="thParking"><label class="form-check-label" for="thParking">Otopark</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" id="thAC"><label class="form-check-label" for="thAC">Klima</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" id="thPet"><label class="form-check-label" for="thPet">Evcil Hayvan</label></div>
+                    </div></div>
+                    <div class="col-12"><label class="form-label">Fotoğraflar</label><input type="file" class="form-control" id="thImages" multiple accept="image/*"></div>
+                    <div class="col-12"><button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-plus-circle"></i> Ev Ekle</button></div>
+                </div>
+            </form></div></div></div></div></div></div>
+</main>
+<script layout:fragment="scripts">
+document.getElementById('addHouseForm').addEventListener('submit',async function(e){e.preventDefault();
+const t=localStorage.getItem('accessToken');
+const body={title:document.getElementById('thTitle').value,description:document.getElementById('thDesc').value,city:document.getElementById('thCity').value,district:document.getElementById('thDistrict').value,address:document.getElementById('thAddress').value,nightlyPrice:parseFloat(document.getElementById('thPrice').value),cleaningFee:parseFloat(document.getElementById('thClean').value)||0,capacity:parseInt(document.getElementById('thCapacity').value),roomCount:parseInt(document.getElementById('thRooms').value)||1,bedCount:parseInt(document.getElementById('thBeds').value)||1,bathroomCount:parseInt(document.getElementById('thBaths').value)||1,wifi:document.getElementById('thWifi').checked,parking:document.getElementById('thParking').checked,airConditioner:document.getElementById('thAC').checked,petAllowed:document.getElementById('thPet').checked};
+const r=await fetch('/api/tinyhouses',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify(body)});
+const d=await r.json();
+if(d.success){const files=document.getElementById('thImages').files;
+if(files.length>0){const fd=new FormData();for(let f of files)fd.append('files',f);await fetch(`/api/tinyhouses/${d.data.id}/images`,{method:'POST',headers:{'Authorization':'Bearer '+t},body:fd});}
+showToast('Ev başarıyla eklendi!','success');setTimeout(()=>location.href='/owner/my-houses',1500);}else showToast(d.message,'danger');});
+</script></body></html>

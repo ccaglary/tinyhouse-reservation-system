@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Owner Dashboard</title></head>
+<body><main layout:fragment="content">
+    <div class="dashboard-wrapper"><div class="container-fluid"><div class="row">
+        <nav class="col-md-2 sidebar"><div class="sidebar-header"><h5><i class="bi bi-house-gear"></i> Ev Sahibi</h5></div>
+            <ul class="nav flex-column"><li class="nav-item"><a class="nav-link active" href="/owner/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li><li class="nav-item"><a class="nav-link" href="/owner/my-houses"><i class="bi bi-house"></i> Evlerim</a></li><li class="nav-item"><a class="nav-link" href="/owner/add-house"><i class="bi bi-plus-circle"></i> Ev Ekle</a></li><li class="nav-item"><a class="nav-link" href="/owner/reservations"><i class="bi bi-calendar-check"></i> Rezervasyonlar</a></li></ul></nav>
+        <div class="col-md-10 dashboard-content"><h3 class="mb-4">Owner Dashboard</h3>
+            <div class="row g-4 mb-4"><div class="col-md-4"><div class="stat-card-dash"><div class="stat-card-icon bg-primary"><i class="bi bi-house-fill"></i></div><div><h4 id="myHouseCount">-</h4><p>Evlerim</p></div></div></div>
+                <div class="col-md-4"><div class="stat-card-dash"><div class="stat-card-icon bg-success"><i class="bi bi-calendar-check-fill"></i></div><div><h4 id="myResCount">-</h4><p>Rezervasyonlar</p></div></div></div>
+                <div class="col-md-4"><div class="stat-card-dash"><div class="stat-card-icon bg-info"><i class="bi bi-currency-dollar"></i></div><div><h4 id="myRevenue">-</h4><p>Toplam Gelir</p></div></div></div></div>
+            <div class="card"><div class="card-body"><h5>Son Rezervasyonlar</h5><div class="table-responsive"><table class="table"><thead><tr><th>Kiracı</th><th>Ev</th><th>Tarih</th><th>Tutar</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="ownerResTable"></tbody></table></div></div></div>
+        </div></div></div></div>
+</main>
+<script layout:fragment="scripts">
+async function load(){const t=localStorage.getItem('accessToken');
+const[hr,rr,rev]=await Promise.all([fetch('/api/owner/my-houses?size=100',{headers:{'Authorization':'Bearer '+t}}),fetch('/api/owner/reservations?size=10&sort=createdAt,desc',{headers:{'Authorization':'Bearer '+t}}),fetch('/api/owner/revenue',{headers:{'Authorization':'Bearer '+t}})]);
+const hd=await hr.json(),rd=await rr.json(),rv=await rev.json();
+if(hd.success)document.getElementById('myHouseCount').textContent=hd.data.totalElements||0;
+if(rv.success)document.getElementById('myRevenue').textContent=(rv.data||0).toLocaleString('tr-TR')+' ₺';
+if(rd.success){document.getElementById('myResCount').textContent=rd.data.totalElements||0;
+const sc={PENDING:'warning',CONFIRMED:'primary',COMPLETED:'success',CANCELLED:'secondary',REJECTED:'danger'};
+document.getElementById('ownerResTable').innerHTML=rd.data.content.map(r=>`<tr><td>${r.tenantName}</td><td>${r.tinyHouseTitle}</td><td>${r.startDate} - ${r.endDate}</td><td>${r.totalPrice}₺</td><td><span class="badge bg-${sc[r.reservationStatus]||'secondary'}">${r.reservationStatus}</span></td><td>${r.reservationStatus==='PENDING'?`<button class="btn btn-sm btn-success me-1" onclick="confirm_(${r.id})"><i class="bi bi-check"></i></button><button class="btn btn-sm btn-danger" onclick="reject_(${r.id})"><i class="bi bi-x"></i></button>`:'-'}</td></tr>`).join('');}}
+async function confirm_(id){const t=localStorage.getItem('accessToken');await fetch(`/api/owner/reservations/${id}/confirm`,{method:'PUT',headers:{'Authorization':'Bearer '+t}});load();}
+async function reject_(id){const t=localStorage.getItem('accessToken');await fetch(`/api/owner/reservations/${id}/reject`,{method:'PUT',headers:{'Authorization':'Bearer '+t}});load();}
+load();
+</script></body></html>

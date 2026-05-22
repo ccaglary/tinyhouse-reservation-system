@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Admin - Tiny House'lar</title></head>
+<body><main layout:fragment="content">
+    <div class="dashboard-wrapper"><div class="container-fluid"><div class="row">
+        <nav class="col-md-2 sidebar"><div class="sidebar-header"><h5><i class="bi bi-shield-check"></i> Admin</h5></div>
+            <ul class="nav flex-column"><li class="nav-item"><a class="nav-link" href="/admin/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li><li class="nav-item"><a class="nav-link" href="/admin/users"><i class="bi bi-people"></i> Kullanıcılar</a></li><li class="nav-item"><a class="nav-link" href="/admin/reservations"><i class="bi bi-calendar-check"></i> Rezervasyonlar</a></li><li class="nav-item"><a class="nav-link active" href="/admin/tinyhouses"><i class="bi bi-house"></i> Tiny House'lar</a></li><li class="nav-item"><a class="nav-link" href="/admin/reports"><i class="bi bi-graph-up"></i> Raporlar</a></li></ul></nav>
+        <div class="col-md-10 dashboard-content"><h3 class="mb-4">Tiny House Yönetimi</h3>
+            <div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Başlık</th><th>Şehir</th><th>Fiyat</th><th>Puan</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="housesTable"></tbody></table></div></div></div>
+        </div></div></div></div>
+</main>
+<script layout:fragment="scripts">
+async function load(){const t=localStorage.getItem('accessToken');const r=await fetch('/api/tinyhouses?size=20',{headers:{'Authorization':'Bearer '+t}});const d=await r.json();if(!d.success)return;
+document.getElementById('housesTable').innerHTML=d.data.content.map(h=>`<tr><td>${h.id}</td><td>${h.title}</td><td>${h.city}</td><td>${h.nightlyPrice}₺</td><td><i class="bi bi-star-fill text-warning"></i> ${h.averageRating||0}</td><td><span class="badge bg-${h.active?'success':'secondary'}">${h.active?'Aktif':'Pasif'}</span></td><td><button class="btn btn-sm btn-outline-warning me-1" onclick="toggle(${h.id})"><i class="bi bi-toggle-on"></i></button><button class="btn btn-sm btn-outline-danger" onclick="del(${h.id})"><i class="bi bi-trash"></i></button></td></tr>`).join('');}
+async function toggle(id){const t=localStorage.getItem('accessToken');await fetch(`/api/admin/tinyhouses/${id}/toggle`,{method:'PUT',headers:{'Authorization':'Bearer '+t}});load();}
+async function del(id){if(!confirm('Silmek istediğinize emin misiniz?'))return;const t=localStorage.getItem('accessToken');await fetch(`/api/admin/tinyhouses/${id}`,{method:'DELETE',headers:{'Authorization':'Bearer '+t}});load();}
+load();
+</script></body></html>

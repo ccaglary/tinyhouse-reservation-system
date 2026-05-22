@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Hesabım</title></head>
+<body><main layout:fragment="content">
+    <div class="dashboard-wrapper"><div class="container py-4">
+        <h3 class="mb-4">Hesabım</h3>
+        <div class="row g-4">
+            <div class="col-md-3"><div class="card text-center p-4"><div class="mb-3"><i class="bi bi-person-circle" style="font-size:4rem;color:var(--primary)"></i></div><h5 id="profileName">-</h5><p class="text-muted" id="profileEmail">-</p>
+                <a href="/tenant/reservations" class="btn btn-outline-primary w-100 mb-2"><i class="bi bi-calendar"></i> Rezervasyonlarım</a>
+                <a href="/tenant/favorites" class="btn btn-outline-danger w-100 mb-2"><i class="bi bi-heart"></i> Favorilerim</a>
+                <button class="btn btn-outline-dark w-100" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Çıkış Yap</button></div></div>
+            <div class="col-md-9"><div class="card"><div class="card-body"><h5 class="mb-3">Profil Bilgileri</h5>
+                <form id="profileForm"><div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">Ad</label><input type="text" class="form-control" id="pFirstName"></div>
+                    <div class="col-md-6"><label class="form-label">Soyad</label><input type="text" class="form-control" id="pLastName"></div>
+                    <div class="col-md-6"><label class="form-label">Telefon</label><input type="tel" class="form-control" id="pPhone"></div>
+                    <div class="col-12"><button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i> Güncelle</button></div>
+                </div></form>
+                <hr><h5 class="mb-3">Şifre Değiştir</h5>
+                <form id="passwordForm"><div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">Mevcut Şifre</label><input type="password" class="form-control" id="oldPwd" required></div>
+                    <div class="col-md-6"><label class="form-label">Yeni Şifre</label><input type="password" class="form-control" id="newPwd" required></div>
+                    <div class="col-12"><button type="submit" class="btn btn-warning"><i class="bi bi-key"></i> Şifre Değiştir</button></div>
+                </div></form>
+            </div></div></div>
+        </div>
+    </div></div>
+</main>
+<script layout:fragment="scripts">
+const user = JSON.parse(localStorage.getItem('user')||'{}');
+document.getElementById('profileName').textContent = (user.firstName||'')+' '+(user.lastName||'');
+document.getElementById('profileEmail').textContent = user.email||'';
+document.getElementById('pFirstName').value = user.firstName||'';
+document.getElementById('pLastName').value = user.lastName||'';
+document.getElementById('pPhone').value = user.phoneNumber||'';
+</script></body></html>

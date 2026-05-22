@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Admin - Rezervasyonlar</title></head>
+<body>
+<main layout:fragment="content">
+    <div class="dashboard-wrapper"><div class="container-fluid"><div class="row">
+        <nav class="col-md-2 sidebar">
+            <div class="sidebar-header"><h5><i class="bi bi-shield-check"></i> Admin</h5></div>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link" href="/admin/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/admin/users"><i class="bi bi-people"></i> Kullanıcılar</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/admin/reservations"><i class="bi bi-calendar-check"></i> Rezervasyonlar</a></li>
+                <li class="nav-item"><a class="nav-link" href="/admin/tinyhouses"><i class="bi bi-house"></i> Tiny House'lar</a></li>
+                <li class="nav-item"><a class="nav-link" href="/admin/reports"><i class="bi bi-graph-up"></i> Raporlar</a></li>
+            </ul>
+        </nav>
+        <div class="col-md-10 dashboard-content">
+            <h3 class="mb-4">Rezervasyon Yönetimi</h3>
+            <div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover">
+                <thead><tr><th>ID</th><th>Kiracı</th><th>Tiny House</th><th>Tarih</th><th>Tutar</th><th>Durum</th></tr></thead>
+                <tbody id="resTable"></tbody>
+            </table></div></div></div>
+        </div>
+    </div></div></div>
+</main>
+<script layout:fragment="scripts">
+async function loadRes() {
+    const token = localStorage.getItem('accessToken');
+    const res = await fetch('/api/admin/reservations?size=20&sort=createdAt,desc', {headers:{'Authorization':'Bearer '+token}});
+    const data = await res.json();
+    if (!data.success) return;
+    document.getElementById('resTable').innerHTML = data.data.content.map(r => {
+        const statusColors = {PENDING:'warning',CONFIRMED:'primary',COMPLETED:'success',CANCELLED:'secondary',REJECTED:'danger'};
+        return `<tr><td>${r.id}</td><td>${r.tenantName}</td><td>${r.tinyHouseTitle}</td>
+        <td>${r.startDate} - ${r.endDate}</td><td>${r.totalPrice} ₺</td>
+        <td><span class="badge bg-${statusColors[r.reservationStatus]||'secondary'}">${r.reservationStatus}</span></td></tr>`;
+    }).join('');
+}
+loadRes();
+</script>
+</body>
+</html>

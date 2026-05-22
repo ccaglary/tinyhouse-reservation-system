@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Rezervasyonlarım</title></head>
+<body><main layout:fragment="content">
+    <div class="dashboard-wrapper"><div class="container-fluid"><div class="row">
+        <nav class="col-md-2 sidebar"><div class="sidebar-header"><h5><i class="bi bi-house-gear"></i> Ev Sahibi</h5></div>
+            <ul class="nav flex-column"><li class="nav-item"><a class="nav-link" href="/owner/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li><li class="nav-item"><a class="nav-link" href="/owner/my-houses"><i class="bi bi-house"></i> Evlerim</a></li><li class="nav-item"><a class="nav-link" href="/owner/add-house"><i class="bi bi-plus-circle"></i> Ev Ekle</a></li><li class="nav-item"><a class="nav-link active" href="/owner/reservations"><i class="bi bi-calendar-check"></i> Rezervasyonlar</a></li></ul></nav>
+        <div class="col-md-10 dashboard-content"><h3 class="mb-4">Gelen Rezervasyonlar</h3>
+            <div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Kiracı</th><th>Ev</th><th>Tarih</th><th>Tutar</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="resBody"></tbody></table></div></div></div></div></div></div></div>
+</main>
+<script layout:fragment="scripts">
+async function load(){const t=localStorage.getItem('accessToken');const r=await fetch('/api/owner/reservations?size=20&sort=createdAt,desc',{headers:{'Authorization':'Bearer '+t}});const d=await r.json();if(!d.success)return;
+const sc={PENDING:'warning',CONFIRMED:'primary',COMPLETED:'success',CANCELLED:'secondary',REJECTED:'danger'};
+document.getElementById('resBody').innerHTML=d.data.content.map(r=>`<tr><td>${r.tenantName}</td><td>${r.tinyHouseTitle}</td><td>${r.startDate} - ${r.endDate}</td><td>${r.totalPrice}₺</td><td><span class="badge bg-${sc[r.reservationStatus]}">${r.reservationStatus}</span></td><td>${r.reservationStatus==='PENDING'?`<button class="btn btn-sm btn-success me-1" onclick="c(${r.id})"><i class="bi bi-check"></i> Onayla</button><button class="btn btn-sm btn-danger" onclick="j(${r.id})"><i class="bi bi-x"></i> Reddet</button>`:'-'}</td></tr>`).join('');}
+async function c(id){await fetch(`/api/owner/reservations/${id}/confirm`,{method:'PUT',headers:{'Authorization':'Bearer '+localStorage.getItem('accessToken')}});load();}
+async function j(id){await fetch(`/api/owner/reservations/${id}/reject`,{method:'PUT',headers:{'Authorization':'Bearer '+localStorage.getItem('accessToken')}});load();}
+load();
+</script></body></html>

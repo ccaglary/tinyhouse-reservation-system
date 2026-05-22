@@ -1,0 +1,4 @@
+package com.tinyhouse.dto.response;
+import lombok.*; import java.math.BigDecimal; import java.time.LocalDateTime; import java.util.List;
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+public class TinyHouseResponse { private Long id; private String title; private String description; private String city; private String district; private String address; private Double latitude; private Double longitude; private BigDecimal nightlyPrice; private BigDecimal cleaningFee; private Integer capacity; private Integer roomCount; private Integer bedCount; private Integer bathroomCount; private boolean wifi; private boolean parking; private boolean airConditioner; private boolean petAllowed; private BigDecimal averageRating; private boolean active; private Long ownerId; private String ownerName; private List<TinyHouseImageResponse> images; private String coverImageUrl; private int reviewCount; private LocalDateTime createdAt; }

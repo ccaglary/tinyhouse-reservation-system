@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Tiny House Detay</title></head>
+<body>
+<main layout:fragment="content">
+    <section class="detail-section">
+        <div class="container" id="detailContainer">
+            <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+        </div>
+    </section>
+</main>
+<script layout:fragment="scripts">
+const houseId = window.location.pathname.split('/').pop();
+async function loadDetail() {
+    const res = await fetch(`/api/tinyhouses/${houseId}`);
+    const data = await res.json();
+    if (!data.success) { document.getElementById('detailContainer').innerHTML = '<h4>Bulunamadı</h4>'; return; }
+    const h = data.data;
+    document.getElementById('detailContainer').innerHTML = `
+        <nav aria-label="breadcrumb" class="mb-3"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="/tinyhouses">Tiny House'lar</a></li><li class="breadcrumb-item active">${h.title}</li></ol></nav>
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="detail-gallery mb-4"><img src="${h.coverImageUrl || '/images/placeholder.jpg'}" class="img-fluid rounded-3 w-100" alt="${h.title}" style="max-height:450px;object-fit:cover"></div>
+                <h2>${h.title}</h2>
+                <p class="text-muted mb-3"><i class="bi bi-geo-alt"></i> ${h.city}${h.district ? ', ' + h.district : ''} <span class="ms-3"><i class="bi bi-star-fill text-warning"></i> ${h.averageRating || '0'} (${h.reviewCount} yorum)</span></p>
+                <hr>
+                <h5>Açıklama</h5><p>${h.description || 'Açıklama bulunmamaktadır.'}</p>
+                <hr>
+                <h5>Özellikler</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3"><div class="feature-badge"><i class="bi bi-people"></i> ${h.capacity} Kişi</div></div>
+                    <div class="col-6 col-md-3"><div class="feature-badge"><i class="bi bi-door-open"></i> ${h.roomCount} Oda</div></div>
+                    <div class="col-6 col-md-3"><div class="feature-badge"><i class="bi bi-lamp"></i> ${h.bedCount} Yatak</div></div>
+                    <div class="col-6 col-md-3"><div class="feature-badge"><i class="bi bi-droplet"></i> ${h.bathroomCount} Banyo</div></div>
+                    ${h.wifi ? '<div class="col-6 col-md-3"><div class="feature-badge"><i class="bi bi-wifi"></i> Wi-Fi</div></div>' : ''}
+                    ${h.parking ? '<div class="col-6 col-md-3"><div class="feature-badge"><i class="bi bi-car-front"></i> Otopark</div></div>' : ''}
+                    ${h.airConditioner ? '<div class="col-6 col-md-3"><div class="feature-badge"><i class="bi bi-snow"></i> Klima</div></div>' : ''}
+                    ${h.petAllowed ? '<div class="col-6 col-md-3"><div class="feature-badge"><i class="bi bi-heart"></i> Evcil Hayvan</div></div>' : ''}
+                </div>
+                <hr>
+                <h5>Yorumlar</h5><div id="reviewsContainer"><p class="text-muted">Yükleniyor...</p></div>
+            </div>
+            <div class="col-lg-4">
+                <div class="booking-card sticky-top" style="top:90px">
+                    <div class="booking-price mb-3"><span class="h3">${h.nightlyPrice} ₺</span> <span class="text-muted">/ gece</span></div>
+                    ${h.cleaningFee > 0 ? `<p class="text-muted small">Temizlik ücreti: ${h.cleaningFee} ₺</p>` : ''}
+                    <hr>
+                    <form id="bookingForm">
+                        <div class="mb-3"><label class="form-label">Giriş Tarihi</label><input type="date" class="form-control" id="bookStartDate" required></div>
+                        <div class="mb-3"><label class="form-label">Çıkış Tarihi</label><input type="date" class="form-control" id="bookEndDate" required></div>
+                        <div class="mb-3"><label class="form-label">Özel İstek</label><textarea class="form-control" id="bookSpecialReq" rows="2" placeholder="Varsa özel istekleriniz..."></textarea></div>
+                        <div class="price-summary mb-3 d-none" id="priceSummary"></div>
+                        <button type="submit" class="btn btn-primary w-100 btn-lg"><i class="bi bi-calendar-check"></i> Rezervasyon Yap</button>
+                    </form>
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-outline-danger" id="favBtn" onclick="toggleFav()"><i class="bi bi-heart"></i> Favorilere Ekle</button>
+                    </div>
+                    <p class="text-muted small mt-3 text-center">Ev Sahibi: ${h.ownerName || 'Bilinmiyor'}</p>
+                </div>
+            </div>
+        </div>`;
+    loadReviews();
+    // Price calc
+    const sd = document.getElementById('bookStartDate'), ed = document.getElementById('bookEndDate');
+    function calcPrice() {
+        if (sd.value && ed.value) {
+            const days = Math.ceil((new Date(ed.value) - new Date(sd.value)) / 86400000);
+            if (days > 0) {
+                const total = days * h.nightlyPrice + (h.cleaningFee || 0);
+                document.getElementById('priceSummary').classList.remove('d-none');
+                document.getElementById('priceSummary').innerHTML = `<p>${days} gece x ${h.nightlyPrice} ₺ = <strong>${total} ₺</strong></p>`;
+            }
+        }
+    }
+    sd.addEventListener('change', calcPrice); ed.addEventListener('change', calcPrice);
+    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/login'; return; }
+        const res = await fetch('/api/reservations', {
+            method: 'POST', headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body: JSON.stringify({tinyHouseId: parseInt(houseId), startDate: sd.value, endDate: ed.value, specialRequest: document.getElementById('bookSpecialReq').value})
+        });
+        const d = await res.json();
+        if (d.success) { showToast('Rezervasyon oluşturuldu!', 'success'); setTimeout(() => location.href='/tenant/reservations', 1500); }
+        else showToast(d.message, 'danger');
+    });
+}
+async function loadReviews() {
+    const res = await fetch(`/api/reviews/tinyhouse/${houseId}?size=10`);
+    const data = await res.json();
+    const c = document.getElementById('reviewsContainer');
+    if (!data.success || !data.data.content.length) { c.innerHTML = '<p class="text-muted">Henüz yorum yapılmamış.</p>'; return; }
+    c.innerHTML = data.data.content.map(r => `<div class="review-card mb-3"><div class="d-flex justify-content-between"><strong>${r.tenantName}</strong><span class="text-warning"><i class="bi bi-star-fill"></i> ${r.rating}</span></div><p class="mb-1">${r.comment || ''}</p>${r.ownerReply ? `<div class="owner-reply"><small class="text-muted"><i class="bi bi-reply"></i> Ev sahibi: ${r.ownerReply}</small></div>` : ''}</div>`).join('');
+}
+async function toggleFav() {
+    const token = localStorage.getItem('accessToken');
+    if (!token) { window.location.href = '/login'; return; }
+    await fetch(`/api/favorites/${houseId}`, {method:'POST',headers:{'Authorization':'Bearer '+token}});
+    showToast('Favori güncellendi', 'success');
+}
+loadDetail();
+</script>
+</body>
+</html>

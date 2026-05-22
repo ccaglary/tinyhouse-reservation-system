@@ -1,0 +1,4 @@
+package com.tinyhouse.dto.response;
+import com.tinyhouse.enums.NotificationType; import lombok.*; import java.time.LocalDateTime;
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+public class NotificationResponse { private Long id; private String title; private String message; private NotificationType notificationType; private boolean isRead; private LocalDateTime createdAt; }

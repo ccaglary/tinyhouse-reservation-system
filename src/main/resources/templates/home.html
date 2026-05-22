@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Ana Sayfa</title></head>
+<body>
+<main layout:fragment="content">
+    
+    <section class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content text-center text-white">
+            <h1 class="hero-title">Hayalinizdeki Tiny House<br>Tatilini Keşfedin</h1>
+            <p class="hero-subtitle">Doğayla iç içe, huzurlu ve konforlu konaklama deneyimi</p>
+            <div class="search-box mx-auto mt-4">
+                <form class="row g-2 align-items-end" id="heroSearchForm">
+                    <div class="col-md-4">
+                        <label class="form-label text-white-50 small">Şehir</label>
+                        <select class="form-select" id="heroCity">
+                            <option value="">Tüm Şehirler</option>
+                            <option th:each="city : ${cities}" th:value="${city}" th:text="${city}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50 small">Giriş Tarihi</label>
+                        <input type="date" class="form-control" id="heroCheckIn">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50 small">Çıkış Tarihi</label>
+                        <input type="date" class="form-control" id="heroCheckOut">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100 btn-lg">
+                            <i class="bi bi-search"></i> Ara
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats-section py-5">
+        <div class="container">
+            <div class="row text-center g-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-house-heart"></i></div>
+                        <h3 class="stat-number">500+</h3>
+                        <p class="stat-label">Tiny House</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-geo-alt"></i></div>
+                        <h3 class="stat-number">50+</h3>
+                        <p class="stat-label">Şehir</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-people"></i></div>
+                        <h3 class="stat-number">10K+</h3>
+                        <p class="stat-label">Mutlu Misafir</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-star"></i></div>
+                        <h3 class="stat-number">4.8</h3>
+                        <p class="stat-label">Ortalama Puan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">En Beğenilen Tiny House'lar</h2>
+                <p class="text-muted">Misafirlerimizin en çok sevdiği mekanlar</p>
+            </div>
+            <div class="row g-4" id="topRatedGrid">
+                <div th:each="house : ${topRated}" class="col-md-6 col-lg-4">
+                    <div class="house-card" th:onclick="|window.location.href='/tinyhouses/' + ${house.id}|">
+                        <div class="house-card-img">
+                            <img th:src="${house.coverImageUrl != null ? house.coverImageUrl : '/images/placeholder.jpg'}"
+                                 th:alt="${house.title}" class="w-100">
+                            <div class="house-card-badge">
+                                <span class="badge bg-primary"><i class="bi bi-star-fill"></i>
+                                    <span th:text="${house.averageRating}">4.5</span></span>
+                            </div>
+                        </div>
+                        <div class="house-card-body">
+                            <h5 class="house-card-title" th:text="${house.title}">Tiny House</h5>
+                            <p class="house-card-location">
+                                <i class="bi bi-geo-alt"></i>
+                                <span th:text="${house.city}">İstanbul</span>
+                                <span th:if="${house.district}" th:text="', ' + ${house.district}"></span>
+                            </p>
+                            <div class="house-card-features">
+                                <span><i class="bi bi-people"></i> <span th:text="${house.capacity}">4</span></span>
+                                <span><i class="bi bi-door-open"></i> <span th:text="${house.roomCount}">2</span></span>
+                                <span th:if="${house.wifi}"><i class="bi bi-wifi"></i></span>
+                                <span th:if="${house.parking}"><i class="bi bi-car-front"></i></span>
+                            </div>
+                            <div class="house-card-price">
+                                <span class="price" th:text="${house.nightlyPrice + ' ₺'}">500 ₺</span>
+                                <span class="price-unit">/ gece</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <a th:href="@{/tinyhouses}" class="btn btn-outline-primary btn-lg">
+                    Tümünü Gör <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">Nasıl Çalışır?</h2>
+                <p class="text-muted">Üç kolay adımda hayalinizdeki tatile başlayın</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <div class="step-card">
+                        <div class="step-icon"><i class="bi bi-search"></i></div>
+                        <h5>Keşfet</h5>
+                        <p class="text-muted">İstediğiniz şehir, tarih ve özelliklere göre tiny house arayın.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="step-card">
+                        <div class="step-icon"><i class="bi bi-calendar-check"></i></div>
+                        <h5>Rezervasyon Yap</h5>
+                        <p class="text-muted">Beğendiğiniz evi seçin ve tarihlerinizi belirleyin.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="step-card">
+                        <div class="step-icon"><i class="bi bi-emoji-smile"></i></div>
+                        <h5>Tadını Çıkarın</h5>
+                        <p class="text-muted">Doğanın içinde huzurlu bir tatil deneyimi yaşayın.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script layout:fragment="scripts">
+document.getElementById('heroSearchForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const city = document.getElementById('heroCity').value;
+    let url = '/tinyhouses';
+    if (city) url += '?city=' + encodeURIComponent(city);
+    window.location.href = url;
+});
+</script>
+</body>
+</html>

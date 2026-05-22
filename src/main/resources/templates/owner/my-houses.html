@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Evlerim</title></head>
+<body><main layout:fragment="content">
+    <div class="dashboard-wrapper"><div class="container-fluid"><div class="row">
+        <nav class="col-md-2 sidebar"><div class="sidebar-header"><h5><i class="bi bi-house-gear"></i> Ev Sahibi</h5></div>
+            <ul class="nav flex-column"><li class="nav-item"><a class="nav-link" href="/owner/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li><li class="nav-item"><a class="nav-link active" href="/owner/my-houses"><i class="bi bi-house"></i> Evlerim</a></li><li class="nav-item"><a class="nav-link" href="/owner/add-house"><i class="bi bi-plus-circle"></i> Ev Ekle</a></li><li class="nav-item"><a class="nav-link" href="/owner/reservations"><i class="bi bi-calendar-check"></i> Rezervasyonlar</a></li></ul></nav>
+        <div class="col-md-10 dashboard-content"><div class="d-flex justify-content-between mb-4"><h3>Evlerim</h3><a href="/owner/add-house" class="btn btn-primary"><i class="bi bi-plus"></i> Yeni Ev Ekle</a></div>
+            <div class="row g-4" id="myHousesGrid"></div></div></div></div></div>
+</main>
+<script layout:fragment="scripts">
+async function load(){const t=localStorage.getItem('accessToken');const r=await fetch('/api/owner/my-houses?size=20',{headers:{'Authorization':'Bearer '+t}});const d=await r.json();if(!d.success)return;
+document.getElementById('myHousesGrid').innerHTML=d.data.content.map(h=>`<div class="col-md-6 col-lg-4"><div class="house-card"><div class="house-card-img"><img src="${h.coverImageUrl||'/images/placeholder.jpg'}" alt="${h.title}"><div class="house-card-badge"><span class="badge bg-${h.active?'success':'secondary'}">${h.active?'Aktif':'Pasif'}</span></div></div><div class="house-card-body"><h5>${h.title}</h5><p class="text-muted"><i class="bi bi-geo-alt"></i> ${h.city}</p><p><strong>${h.nightlyPrice} ₺</strong> / gece</p></div></div></div>`).join('');}
+load();
+</script></body></html>

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>E-posta Doğrulama</title></head>
+<body><main layout:fragment="content"><section class="auth-section"><div class="container text-center py-5">
+    <div id="verifyResult"><div class="spinner-border text-primary"></div><p class="mt-3">Doğrulanıyor...</p></div>
+</div></section></main>
+<script layout:fragment="scripts">
+const token=new URLSearchParams(window.location.search).get('token');
+if(token){fetch('/api/auth/verify-email?token='+token).then(r=>r.json()).then(d=>{
+document.getElementById('verifyResult').innerHTML=d.success?'<i class="bi bi-check-circle-fill text-success" style="font-size:4rem"></i><h3 class="mt-3">E-posta doğrulandı!</h3><a href="/login" class="btn btn-primary mt-3">Giriş Yap</a>':'<i class="bi bi-x-circle-fill text-danger" style="font-size:4rem"></i><h3 class="mt-3">Doğrulama başarısız</h3><p>'+d.message+'</p>';});}
+else{document.getElementById('verifyResult').innerHTML='<p>Geçersiz bağlantı</p>';}
+</script></body></html>
